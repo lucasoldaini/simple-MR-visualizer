@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="margin: 48px; max-width: 640px; min-width: 320px; font-size: 16px">
+
+{% if show_nav %}
+<div style="margin-bottom: 10px; text-align: center">
+    <button onclick="prev()" style="margin-right: 64px; width: 64px">
+        &#x2190; Prev
+    </button>
+    <button onclick="topics()" style="margin-right: 64px; width: 64px">
+        &#x2191; Topics
+    </button>
+    <button onclick="next()" style="width: 64px">
+        Next &#x2192;
+    </button>
+</div>
+{% endif %}
+
+{% if pos_info %}
+    <div style="margin-bottom: 48px; text-align: center; font-style: italic;">
+        topic: {{ pos_info['topic_no'] }}&nbsp; &nbsp; &nbsp; &nbsp; report: {{ pos_info['report_no'] }}/{{ pos_info['topic_cnt'] }}
+    </div>
+{% endif %}
+
+{% for sec_name, sec_data, type_data in record %}
+    <div id="{{sec_name}}" style="margin-bottom: 16pt">
+        <b>{{sec_name.strip('_').replace('_', ' ').title()}}</b> <span></span><br>
+        {% if type_data == '<type \'list\'>' %}
+        <table style="width:100%" border="1">
+        <tr>
+        <td style="padding: 4px"><i><b>Score Type</b></i></td>
+        <td style="padding: 4px"><i><b>Term Matching</b></i></td>
+        <td style="padding: 4px"><i><b>Term Score</b></i></td>
+        </tr>
+        {% for fld, term, score in sec_data %}
+        <tr>
+        <td style="padding: 4px">{{fld}}</td>
+        <td style="padding: 4px">{{term.split('^')[0]}}</td>
+        <td style="padding: 4px">{{score}}</td>
+        </tr>
+        {% endfor %}
+        </table>
+        {% else %}
+        <div style="font-family: serif; font-size: 18px" onmouseup="getSelectionPosition()">{{sec_data}}</div>
+        {% endif %}
+    </div>
+{% endfor %}
+
+</div>
+<script type="text/javascript">
+    document.onkeydown = checkKey;
+
+    function checkKey(e) {
+
+        e = e || window.event;
+
+        if (e.keyCode == '38') {
+            // up arrow
+            topics();
+        }
+        else if (e.keyCode == '40') {
+            // down arrow
+            // do nothing
+        }
+        else if (e.keyCode == '37') {
+           // left arrow
+           prev();
+        }
+        else if (e.keyCode == '39') {
+           // right arrow
+           next();
+        }
+
+    }
+
+
+    function prev() {
+        $.post( "/prev_report", function() {
+            location.reload();
+        });
+    }
+
+    function next() {
+        $.post( "/next_report", function() {
+            location.reload();
+        });
+    }
+
+    function topics(){
+        window.location.href = "/navigate";
+    }
+
+    function getSelectionPosition () {
+        var sel = window.getSelection();
+
+        var spanTags = document.getElementsByTagName('span');
+        for (var i = spanTags.length - 1; i >= 0; i--) {
+            spanTags[i].textContent = "";
+        }
+
+        var targetText = sel.baseNode.parentElement.parentElement.children[1]
+
+        if (sel.baseOffset < sel.focusOffset) {
+            targetText.textContent = "(selection: " + sel.baseOffset + ", " + sel.focusOffset + ")";
+        }else if (sel.baseOffset > sel.focusOffset) {
+            targetText.textContent = "(selection: " + sel.focusOffset + ", " + sel.baseOffset + ")";
+        }
+    }
+</script>
+{% endblock %}
